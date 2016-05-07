@@ -6,6 +6,7 @@ import json
 import webbrowser
 from http.cookiejar import CookieJar
 import re
+import sys
 
 N = 100
 
@@ -32,6 +33,7 @@ class MailruParser:
                 print('Authorization successful')
             else:
                 print('Authorization failed')
+                sys.exit()
 
     def apiCall(self, name, params):
         if self.token:
@@ -59,7 +61,7 @@ class MailruParser:
 
     def enumPolls(self):
         for i in self.enumQuestions('A'):
-            if i.get('polltype') == 'S':
+            if i.get('polltype') == 'S' and self.canVote(i['id']):
                 yield i['id']
 
     def enumVoting(self):
@@ -70,11 +72,19 @@ class MailruParser:
 
 def main():
     s = set()
-    login = input('Username: ')
-    password = input('Password: ')
-    m = MailruParser(login, password)
+    try:
+        login, password = open('login.txt').read().splitlines()
+        m = MailruParser(login, password)
+    except Exception:
+        login = input('Username: ')
+        password = input('Password: ')
+        m = MailruParser(login, password)
+        with open('login.txt', 'w') as f:
+            f.write(login + '\n' + password)
     mode = input('Mode (p/v): ').lower()
-    for i in (m.enumPolls() if mode.startswith('p') else m.enumVoting()):
+    while mode not in 'pv':
+        mode = input('Mode (p/v): ').lower()
+    for i in (m.enumPolls() if mode == 'p' else m.enumVoting()):
         if i in s:
             continue
         s.add(i)
