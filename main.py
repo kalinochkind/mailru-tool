@@ -16,6 +16,7 @@ def cookieByName(cj, name):
             return i.value
 
 class MailruParser:
+
     def __init__(self, login=None, password=None):
         cj = CookieJar()
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
@@ -35,12 +36,15 @@ class MailruParser:
                 print('Authorization failed')
                 sys.exit()
 
-    def apiCall(self, name, params):
+    def apiCall(self, name, params, method='get'):
         if self.token:
             params.update({'token': self.token, 'salt': self.salt})
-        url = 'https://otvet.mail.ru/api/v2/' + name + '?' + urllib.parse.urlencode(params)
-        return json.loads(urllib.request.urlopen(url).read().decode())
-
+        if method.lower() == 'get':
+            url = 'https://otvet.mail.ru/api/v2/' + name + '?' + urllib.parse.urlencode(params)
+            return json.loads(self.opener.open(url).read().decode())
+        else:
+            url = 'https://otvet.mail.ru/api/v2/' + name
+            return json.loads(self.opener.open(url, urllib.parse.urlencode(params).encode('utf-8')).read().decode())
 
     def readPage(self, p, state):
         data = self.apiCall('questlist', {'n': N, 'p': p, 'state': state})
@@ -48,9 +52,6 @@ class MailruParser:
 
     def readQuestion(self, qid):
         return self.apiCall('question', {'qid': qid})
-
-    def canVote(self, qid):
-        return self.readQuestion(qid).get('canreply')
 
     def enumQuestions(self, state):
         p = 0
@@ -60,18 +61,30 @@ class MailruParser:
             p += N
 
     def enumPolls(self):
+        print('Polls')
         for i in self.enumQuestions('A'):
-            if i.get('polltype') == 'S' and self.canVote(i['id']):
-                yield i['id']
+            if i.get('polltype') == 'S':
+                q = self.readQuestion(i['id'])
+                if q.get('canreply'):
+                    resp = self.apiCall('votepoll', {'qid': i['id'], 'vote[]': q['poll']['options'][0]['optid']}, method='post')
+                    if resp['errid'] == 222:
+                        print('Limit reached')
+                        return
+                    print('https://otvet.mail.ru/question/' + str(i['id']))
 
     def enumVoting(self):
+        print('Voting')
         for i in self.enumQuestions('V'):
-            if self.canVote(i['id']):
-                yield i['id']
+            q = self.readQuestion(i['id'])
+            if q.get('canreply'):
+                resp = self.apiCall('votefor', {'qid': i['id'], 'aid': q['answers'][0]['id']}, method='post')
+                if resp['errid'] == 223:
+                    print('Limit reached')
+                    return
+                print('https://otvet.mail.ru/question/' + str(i['id']))
 
 
 def main():
-    s = set()
     try:
         login, password = open('login.txt').read().splitlines()
         m = MailruParser(login, password)
@@ -81,17 +94,9 @@ def main():
         m = MailruParser(login, password)
         with open('login.txt', 'w') as f:
             f.write(login + '\n' + password)
-    mode = input('Mode (p/v): ').lower()
-    while mode not in 'pv':
-        mode = input('Mode (p/v): ').lower()
-    for i in (m.enumPolls() if mode == 'p' else m.enumVoting()):
-        if i in s:
-            continue
-        s.add(i)
-        i = 'https://otvet.mail.ru/question/' + str(i)
-        print(i, end='')
-        webbrowser.open(i)
-        input()
+    m.enumPolls()
+    m.enumVoting()
+
 
 if __name__ == '__main__':
     main()
