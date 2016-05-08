@@ -67,7 +67,7 @@ class MailruParser:
                 q = self.readQuestion(i['id'])
                 if q.get('canreply'):
                     resp = self.apiCall('votepoll', {'qid': i['id'], 'vote[]': q['poll']['options'][0]['optid']}, method='post')
-                    if resp['errid'] == 222:
+                    if resp.get('errid') == 222:
                         print('Limit reached')
                         return
                     print('https://otvet.mail.ru/question/' + str(i['id']))
@@ -78,7 +78,7 @@ class MailruParser:
             q = self.readQuestion(i['id'])
             if q.get('canreply'):
                 resp = self.apiCall('votefor', {'qid': i['id'], 'aid': q['answers'][0]['id']}, method='post')
-                if resp['errid'] == 223:
+                if resp.get('errid') == 223:
                     print('Limit reached')
                     return
                 print('https://otvet.mail.ru/question/' + str(i['id']))
