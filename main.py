@@ -34,7 +34,6 @@ class MailruParser:
                 print('Authorization successful')
             else:
                 print('Authorization failed')
-                sys.exit()
 
     def apiCall(self, name, params, method='get'):
         if self.token:
@@ -87,19 +86,26 @@ class MailruParser:
                 cnt += 1
                 print('https://otvet.mail.ru/question/' + str(i['id']))
 
-
 def main():
     try:
-        login, password = open('login.txt').read().splitlines()
-        m = MailruParser(login, password)
-    except Exception:
-        login = input('Username: ')
-        password = input('Password: ')
-        m = MailruParser(login, password)
-        with open('login.txt', 'w') as f:
-            f.write(login + '\n' + password)
-    m.enumPolls()
-    m.enumVoting()
+        lines = [i for i in open('login.txt').read().strip().splitlines() if i.strip() and not i.startswith('#')]
+    except FileNotFoundError:
+        print('login.txt does not exist')
+        return
+    if not lines:
+        print('No accounts found')
+        return
+    for line in lines:
+        try:
+            login, password = line.split(maxsplit=1)
+            print('Using account', login + '@mail.ru')
+            m = MailruParser(login, password)
+            if m.token:
+                m.enumPolls()
+                m.enumVoting()
+            print()
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':
