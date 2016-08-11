@@ -23,7 +23,7 @@ class MailruParser:
         self.token = None
         self.salt = None
         if login:
-            self.opener.open('https://auth.mail.ru/cgi-bin/auth', urllib.parse.urlencode({'Login': login+'@mail.ru', 'Username': login, 'Password': password}).encode('utf-8'))
+            self.opener.open('https://auth.mail.ru/cgi-bin/auth', urllib.parse.urlencode({'Login': login, 'Username': login, 'Password': password}).encode('utf-8'))
             page = self.opener.open('https://otvet.mail.ru/?login=1').read().decode('utf-8') # token in 'ot' cookie
             self.token = cookieByName(cj, 'ot')
             try:
@@ -98,7 +98,9 @@ def main():
     for line in lines:
         try:
             login, password = line.split(maxsplit=1)
-            print('Using account', login + '@mail.ru')
+            if '@' not in login:
+                login += '@mail.ru'
+            print('Using account', login)
             m = MailruParser(login, password)
             if m.token:
                 m.enumPolls()
