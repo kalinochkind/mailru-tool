@@ -70,6 +70,9 @@ class MailruParser:
                     if resp.get('errid') == 222:
                         print('Limit reached, {} done'.format(cnt))
                         return
+                    if resp.get('errid') == 134:
+                        print('Account is banned')
+                        return
                     cnt += 1
                     print('https://otvet.mail.ru/question/' + str(i['id']))
 
@@ -82,6 +85,9 @@ class MailruParser:
                 resp = self.apiCall('votefor', {'qid': i['id'], 'aid': q['answers'][0]['id']}, method='post')
                 if resp.get('errid') == 223:
                     print('Limit reached, {} done'.format(cnt))
+                    return
+                if resp.get('errid') == 134:
+                    print('Account is banned')
                     return
                 cnt += 1
                 print('https://otvet.mail.ru/question/' + str(i['id']))
