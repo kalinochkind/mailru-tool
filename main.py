@@ -86,6 +86,21 @@ class MailruParser:
                 cnt += 1
                 print('https://otvet.mail.ru/question/' + str(i['id']))
 
+    def search(self, query):
+        print('Searching', query)
+        res = json.loads(self.opener.open('https://go.mail.ru/answer_json?num=1&q=' + urllib.parse.quote(query)).read().decode())
+        try:
+            qid = res['results'][0]['id']
+        except LookupError:
+            return None
+        q = self.readQuestion(qid)
+        if 'best' in q:
+            return q['best']['atext']
+        try:
+            return q['answers'][0]['atext']
+        except LookupError:
+            return None
+
 def main():
     try:
         lines = [i for i in open('login.txt').read().strip().splitlines() if i.strip() and not i.startswith('#')]
