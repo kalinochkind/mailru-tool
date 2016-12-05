@@ -9,6 +9,8 @@ class MailruParser:
     PAGE_SIZE = 100
 
     def __init__(self, login=None, password=None):
+        if '@' not in login:
+            login += '@mail.ru'
         cj = CookieJar()
         self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
         self.token = None
@@ -45,8 +47,8 @@ class MailruParser:
             url = 'https://otvet.mail.ru/api/v2/' + name
             return json.loads(self.opener.open(url, urllib.parse.urlencode(params).encode('utf-8')).read().decode())
 
-    def readPage(self, p, state):
-        data = self.apiCall('questlist', {'n': self.PAGE_SIZE, 'p': p, 'state': state})
+    def readPage(self, p, state, count=0):
+        data = self.apiCall('questlist', {'n': count or self.PAGE_SIZE, 'p': p, 'state': state})
         return data['qst']
 
     def readQuestion(self, qid):
@@ -93,7 +95,6 @@ class MailruParser:
                 print('https://otvet.mail.ru/question/' + str(i['id']))
 
     def search(self, query):
-        print('Searching', query)
         res = json.loads(self.opener.open('https://go.mail.ru/answer_json?num=1&q=' + urllib.parse.quote(query)).read().decode())
         try:
             qid = res['results'][0]['id']
@@ -115,3 +116,18 @@ class MailruParser:
             self.answered_questions.add(i['id'])
             res.append(self.readQuestion(i['id']))
         return res
+
+    def answerQuestion(self, qid, answer):
+        resp = self.apiCall('addans', {'qid': qid, 'Body': answer, 'source': ''}, 'post')
+        if 'errid' in resp:
+            if resp['errid'] == 118:  # already answered
+                return True
+            elif resp['errid'] == 112:  # too long
+                print('Too long')
+                return True
+            elif resp['errid'] == 221:
+                print('Limit reached')
+                return False
+            print(resp)
+            return False
+        return True

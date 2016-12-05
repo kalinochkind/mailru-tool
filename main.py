@@ -15,8 +15,6 @@ def main():
     for line in lines:
         try:
             login, password = line.split(maxsplit=1)
-            if '@' not in login:
-                login += '@mail.ru'
             print('Using account', login)
             m = MailruParser(login, password)
             if m.token:
