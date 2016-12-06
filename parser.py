@@ -128,6 +128,9 @@ class MailruParser:
             elif resp['errid'] == 221:
                 print('Limit reached')
                 return False
+            elif resp['errid'] == 216:
+                print('Too many images')
+                return True
             print(resp)
             return False
         return True
