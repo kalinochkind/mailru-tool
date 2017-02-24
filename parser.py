@@ -131,6 +131,9 @@ class MailruParser:
             elif resp['errid'] == 216:
                 print('Too many images')
                 return True
+            elif resp['errid'] == 237:
+                print('Captcha needed')
+                return False
             print(resp)
             return False
         return True
