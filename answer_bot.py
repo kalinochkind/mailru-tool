@@ -38,9 +38,12 @@ def main():
                 if not result:
                     print(q['qid'], 'no answer found, skipping')
                     continue
+                if '<a' in result or '<img' in result:
+                    print(q['qid'], 'has links or images, skipping')
+                    continue
                 if not mailru.answerQuestion(q['qid'], result):
                     mailru = None
-                    print('Fiished\n')
+                    print('Finished\n')
                     break
                 print(q['qid'], text, '\n-> ', result)
             time.sleep(5)
