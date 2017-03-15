@@ -32,7 +32,6 @@ def main():
                 if q.get('qcomment', '').strip():
                     print(q['qid'], 'has a comment, skipping')
                     continue
-                print(q.get('polltype'))
                 if q.get('polltype') in ('S', 'C'):
                     print(q['qid'], 'is a poll, skipping')
                     continue

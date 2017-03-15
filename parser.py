@@ -137,6 +137,9 @@ class MailruParser:
             elif resp['errid'] == 109:
                 print('Spam words')
                 return True
+            elif resp['errid'] == 161:
+                print('Hidden')
+                return True
             print(resp)
             return False
         return True
