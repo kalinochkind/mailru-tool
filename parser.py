@@ -134,6 +134,9 @@ class MailruParser:
             elif resp['errid'] == 237:
                 print('Captcha needed')
                 return False
+            elif resp['errid'] == 109:
+                print('Spam words')
+                return True
             print(resp)
             return False
         return True

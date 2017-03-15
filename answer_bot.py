@@ -26,6 +26,9 @@ def main():
                     continue
                 last_qid = int(i['id'])
                 q = mailru.readQuestion(i['id'])
+                if 'qid' not in q:
+                    print('Invalid response, skipping')
+                    continue
                 if q.get('qcomment', '').strip():
                     print(q['qid'], 'has a comment, skipping')
                     continue
@@ -45,7 +48,7 @@ def main():
                     mailru = None
                     print('Finished\n')
                     break
-                print(q['qid'], text, '\n-> ', result)
+                print('\n{}: {}\n\nAnswer: {}\n'.format(q['qid'], text, result))
             time.sleep(5)
 
 if __name__ == '__main__':
